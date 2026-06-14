@@ -63,7 +63,11 @@ def batch_generate_tags():
                 except Exception as e:
                     print(f'  图像识别失败: {e}')
             
-            all_tags = list(set(text_tags + image_tags))[:8]
+            category = text_tags[0] if text_tags else None
+            all_tags = text_tags + [t for t in image_tags if t not in text_tags]
+            if category and all_tags and all_tags[0] != category:
+                all_tags = [category] + [t for t in all_tags if t != category]
+            all_tags = all_tags[:8]
             
             for tag_name in all_tags:
                 tag = Tag.query.filter_by(name=tag_name).first()

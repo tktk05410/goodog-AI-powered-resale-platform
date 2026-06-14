@@ -69,29 +69,38 @@ async function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--color-background-page);
+  padding: var(--spacing-lg);
 }
 
 .login-card {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  width: 400px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: var(--color-background);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-xl);
+  width: 440px;
+  max-width: 100%;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lg);
 }
 
 .login-card h2 {
   text-align: center;
-  margin-bottom: 30px;
-  color: #333;
+  margin-bottom: var(--spacing-xl);
+  color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.5px;
 }
 
 .login-footer {
   text-align: center;
-  color: #666;
+  color: var(--text-tertiary);
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
 }
 
 .login-footer a {
-  color: #409eff;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
 }
 </style>

@@ -164,6 +164,49 @@ def search_by_image():
     except Exception as e:
         return jsonify({'error': f'Image search failed: {str(e)}'}), 500
 
+@bp.route('/generate-copywriting', methods=['POST'])
+def generate_copywriting():
+    """根据商品信息生成高转化率文案"""
+    data = request.get_json()
+    title = data.get('title', '')
+    description = data.get('description', '')
+    condition = data.get('condition', '')
+
+    if not title or not description:
+        return jsonify({'error': '标题和描述不能为空'}), 400
+
+    classifier = TextClassifier()
+    result = classifier.generate_copywriting_with_qwen(title, description, condition)
+
+    log_action('AI_GENERATE_COPYWRITING', {
+        'title': title[:50],
+        'condition': condition,
+        'source': result.get('source', '')
+    })
+
+    return jsonify(result)
+
+@bp.route('/generate-tags', methods=['POST'])
+def generate_tags():
+    """根据商品标题和描述自动生成标签"""
+    data = request.get_json()
+    title = data.get('title', '')
+    description = data.get('description', '')
+
+    if not title or not description:
+        return jsonify({'error': '标题和描述不能为空'}), 400
+
+    classifier = TextClassifier()
+    result = classifier.generate_tags_with_qwen(title, description)
+
+    log_action('AI_GENERATE_TAGS', {
+        'title': title[:50],
+        'tags': result.get('tags', []),
+        'source': result.get('source', '')
+    })
+
+    return jsonify(result)
+
 @bp.route('/estimate-price', methods=['POST'])
 def estimate_price():
     """根据商品标题、描述和成色估算二手价格"""

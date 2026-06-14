@@ -34,7 +34,7 @@
 
       <div class="charts-grid">
         <div class="chart-card">
-          <h3>商品分类分布</h3>
+          <h3>商品类别分布</h3>
           <div ref="categoryChartRef" class="chart"></div>
         </div>
         <div class="chart-card">
@@ -206,84 +206,115 @@ onUnmounted(() => {
 <style scoped>
 .stats-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--color-background-page);
 }
 
+/* 导航栏 */
 .header {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--border-light);
+  backdrop-filter: blur(10px);
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 0 var(--spacing-lg);
+  height: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409eff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
   cursor: pointer;
+  letter-spacing: -0.5px;
 }
 
 .user-area {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
+/* 主内容区 */
 .main-content {
-  max-width: 1200px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl) var(--spacing-lg);
 }
 
 .main-content h2 {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
 }
 
+/* ===================================
+   概览卡片网格
+   =================================== */
 .overview-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .overview-card {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
+  background: var(--color-background);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-xl);
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-light);
+  transition: all 0.25s ease;
+}
+
+.overview-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .card-value {
-  font-size: 32px;
-  font-weight: bold;
-  color: #409eff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1;
+  letter-spacing: -1px;
 }
 
 .card-label {
-  color: #666;
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+/* ===================================
+   图表网格
+   =================================== */
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: var(--spacing-lg);
 }
 
 .chart-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-background);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  transition: all 0.25s ease;
+}
+
+.chart-card:hover {
+  box-shadow: var(--shadow-sm);
 }
 
 .chart-card.full-width {
@@ -291,10 +322,17 @@ onUnmounted(() => {
 }
 
 .chart-card h3 {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .chart {
-  height: 300px;
+  height: 320px;
 }
 </style>

@@ -37,7 +37,11 @@ def auto_generate_tags(product):
         except Exception as e:
             print(f'Image tag generation error: {e}')
 
-    all_tags = list(set(text_tags + image_tags))[:8]
+    category = text_tags[0] if text_tags else None
+    all_tags = text_tags + [t for t in image_tags if t not in text_tags]
+    if category and all_tags and all_tags[0] != category:
+        all_tags = [category] + [t for t in all_tags if t != category]
+    all_tags = all_tags[:8]
 
     for tag_name in all_tags:
         tag = Tag.query.filter_by(name=tag_name).first()
@@ -143,8 +147,38 @@ def create_product():
     db.session.add(product)
     db.session.commit()
 
-    auto_generate_tags(product)
-    db.session.commit()
+    # Handle tags from frontend or auto-generate
+    tags_json = request.form.get('tags')
+    if tags_json:
+        import json
+        try:
+            tags_data = json.loads(tags_json)
+            for tag_data in tags_data:
+                tag_id = tag_data.get('id')
+                tag_name = tag_data.get('name')
+                is_ai = tag_data.get('is_ai_generated', False)
+
+                if tag_id:
+                    existing = ProductTag.query.filter_by(product_id=product.id, tag_id=tag_id).first()
+                    if not existing:
+                        db.session.add(ProductTag(product_id=product.id, tag_id=tag_id, is_ai_generated=is_ai))
+                elif tag_name:
+                    tag = Tag.query.filter_by(name=tag_name).first()
+                    if not tag:
+                        tag = Tag(name=tag_name, color='#409eff', is_ai_generated=is_ai)
+                        db.session.add(tag)
+                        db.session.flush()
+                    existing = ProductTag.query.filter_by(product_id=product.id, tag_id=tag.id).first()
+                    if not existing:
+                        db.session.add(ProductTag(product_id=product.id, tag_id=tag.id, is_ai_generated=is_ai))
+            db.session.commit()
+        except Exception as e:
+            print(f'Tag creation error: {e}')
+            auto_generate_tags(product)
+            db.session.commit()
+    else:
+        auto_generate_tags(product)
+        db.session.commit()
 
     log_action('PRODUCT_CREATE', {
         'product_id': product.id,
@@ -243,6 +277,10 @@ def delete_product(product_id):
 
     if product.user_id != g.user.id:
         return jsonify({'error': 'You can only delete your own products'}), 403
+
+    # 先删除关联的标签记录，避免外键约束问题
+    ProductTag.query.filter_by(product_id=product_id).delete()
+    db.session.commit()
 
     db.session.delete(product)
     db.session.commit()

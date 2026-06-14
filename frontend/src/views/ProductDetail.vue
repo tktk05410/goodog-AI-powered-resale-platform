@@ -82,13 +82,56 @@
         </div>
       </div>
     </div>
+
+    <!-- 支付沙盒对话框 -->
+    <el-dialog v-model="showPayDialog" title="支付沙盒" width="420px" :close-on-click-modal="false" :show-close="!paying">
+      <div class="pay-sandbox">
+        <div class="pay-product-info">
+          <p class="pay-product-title">{{ product?.title }}</p>
+          <p class="pay-product-price">
+            <span class="pay-price-symbol">¥</span>
+            <span class="pay-price-value">{{ product?.price || '0.00' }}</span>
+          </p>
+        </div>
+        <div class="pay-method">
+          <p class="pay-label">选择支付方式</p>
+          <el-radio-group v-model="payForm.method" class="pay-method-group">
+            <el-radio-button label="alipay">
+              <el-icon><Wallet /></el-icon> 支付宝
+            </el-radio-button>
+            <el-radio-button label="wechat">
+              <el-icon><ChatDotRound /></el-icon> 微信支付
+            </el-radio-button>
+            <el-radio-button label="balance">
+              <el-icon><Coin /></el-icon> 余额
+            </el-radio-button>
+          </el-radio-group>
+        </div>
+        <div class="pay-password">
+          <p class="pay-label">支付密码</p>
+          <el-input
+            v-model="payForm.password"
+            type="password"
+            maxlength="6"
+            placeholder="请输入6位支付密码"
+            show-password
+          />
+          <p class="pay-hint">沙盒环境，任意6位密码均可支付成功</p>
+        </div>
+        <div class="pay-actions">
+          <el-button @click="showPayDialog = false" :disabled="paying">取消</el-button>
+          <el-button type="primary" @click="handlePay" :loading="paying">确认支付</el-button>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Wallet, ChatDotRound, Coin } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import { productAPI, transactionAPI, messageAPI } from '@/api/modules'
 
@@ -98,6 +141,13 @@ const userStore = useUserStore()
 
 const product = ref(null)
 const loading = ref(false)
+const showPayDialog = ref(false)
+const paying = ref(false)
+const currentTransactionId = ref(null)
+const payForm = reactive({
+  method: 'alipay',
+  password: ''
+})
 
 async function fetchProduct() {
   loading.value = true
@@ -118,14 +168,50 @@ async function handleBuy() {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    await transactionAPI.create({ product_id: product.value.id })
-    ElMessage.success('购买成功，请等待卖家确认')
-    fetchProduct()
+    const res = await transactionAPI.create({ product_id: product.value.id })
+    currentTransactionId.value = res.data.transaction.id
+    payForm.method = 'alipay'
+    payForm.password = ''
+    showPayDialog.value = true
   } catch (e) {
     if (e !== 'cancel') {
       console.error(e)
     }
   }
+}
+
+async function handlePay() {
+  if (!payForm.password || payForm.password.length !== 6) {
+    ElMessage.warning('请输入6位支付密码')
+    return
+  }
+  if (!currentTransactionId.value) {
+    ElMessage.error('交易信息异常')
+    return
+  }
+  paying.value = true
+  try {
+    // 模拟支付网络延迟
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    await transactionAPI.pay(currentTransactionId.value)
+    ElMessage.success(`支付成功（${getPayMethodLabel(payForm.method)}）`)
+    showPayDialog.value = false
+    fetchProduct()
+  } catch (e) {
+    console.error(e)
+    ElMessage.error('支付失败，请重试')
+  } finally {
+    paying.value = false
+  }
+}
+
+function getPayMethodLabel(method) {
+  const map = {
+    alipay: '支付宝',
+    wechat: '微信支付',
+    balance: '余额支付'
+  }
+  return map[method] || method
 }
 
 function handleContact() {
@@ -161,59 +247,70 @@ onMounted(() => {
 <style scoped>
 .product-detail-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--color-background-page);
 }
 
+/* 导航栏 */
 .header {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--border-light);
+  backdrop-filter: blur(10px);
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 0 var(--spacing-lg);
+  height: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409eff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
   cursor: pointer;
+  letter-spacing: -0.5px;
 }
 
 .user-area {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
+/* 主内容区 */
 .main-content {
-  max-width: 1200px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl) var(--spacing-lg);
 }
 
+/* ===================================
+   商品详情 - 左右分栏布局
+   =================================== */
 .product-detail {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  background: white;
-  border-radius: 12px;
-  padding: 30px;
+  gap: var(--spacing-xl);
+  background: var(--color-background);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  border: 1px solid var(--border-light);
 }
 
+/* 左侧图片区域 */
 .product-images .main-image {
   width: 100%;
-  height: 400px;
-  background: #f0f0f0;
-  border-radius: 8px;
+  height: 500px;
+  background: var(--color-background-alt);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .product-images img {
@@ -223,80 +320,170 @@ onMounted(() => {
 }
 
 .no-image {
-  color: #999;
-  font-size: 16px;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
 }
 
+/* 右侧信息卡片 */
 .product-info-card {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-lg);
 }
 
 .product-title {
-  font-size: 24px;
-  margin-bottom: 16px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .product-meta {
   display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
 }
 
+/* 价格展示 - NOMAD风格大字价格 */
 .product-price {
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .price-symbol {
-  font-size: 20px;
-  color: #f56c6c;
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
 }
 
 .price-value {
-  font-size: 32px;
-  font-weight: bold;
-  color: #f56c6c;
+  font-size: 48px;
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
+  line-height: 1;
+  letter-spacing: -1px;
 }
 
-.product-tags {
-  margin-bottom: 24px;
-}
-
-.product-tags h3 {
-  margin-bottom: 12px;
-  font-size: 16px;
+/* 标签区域 */
+.product-tags h3,
+.product-description h3 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
-.product-description {
-  margin-bottom: 24px;
-}
-
-.product-description h3 {
-  margin-bottom: 12px;
-}
-
+/* 描述文本 */
 .product-description p {
-  color: #666;
-  line-height: 1.6;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: var(--font-size-base);
 }
 
+/* 卖家信息 */
 .product-seller {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  color: #999;
-  margin-bottom: 24px;
+  gap: var(--spacing-xs);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-light);
 }
 
+/* 操作按钮组 */
 .product-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-md);
   margin-top: auto;
+  padding-top: var(--spacing-lg);
+}
+
+.product-actions :deep(.el-button) {
+  flex: 1;
+  padding: 16px !important;
+  font-size: var(--font-size-base) !important;
+  font-weight: var(--font-weight-semibold) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+/* 支付对话框样式优化 */
+.pay-sandbox {
+  padding: var(--spacing-md);
+}
+
+.pay-product-info {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.pay-product-title {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.pay-product-price {
+  color: var(--color-primary);
+}
+
+.pay-price-symbol {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.pay-price-value {
+  font-size: 42px;
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.pay-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.pay-method {
+  margin-bottom: var(--spacing-lg);
+}
+
+.pay-method-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.pay-password {
+  margin-bottom: var(--spacing-lg);
+}
+
+.pay-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: var(--spacing-xs);
+}
+
+.pay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
 }
 </style>

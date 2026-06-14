@@ -5,6 +5,10 @@ import datetime
 from functools import wraps
 from flask import Flask, request, jsonify, g, send_from_directory, current_app
 import jwt
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
 from config import config
 from models import db, User, Product, Transaction, Message, SystemLog, Tag, ProductTag

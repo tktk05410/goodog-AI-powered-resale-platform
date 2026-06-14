@@ -2,8 +2,13 @@ from flask import Blueprint, request, jsonify
 from sqlalchemy import func, text
 from datetime import datetime, timedelta
 
-from models import db, Product, Transaction, User, Message, SystemLog
+from models import db, Product, Transaction, User, Message, SystemLog, ProductTag, Tag
 from app import token_required
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'ai_services'))
+from text_classifier import CATEGORY_KEYWORDS
 
 bp = Blueprint('stats', __name__)
 
@@ -26,15 +31,40 @@ def get_overview():
 
 @bp.route('/category-distribution', methods=['GET'])
 def get_category_distribution():
-    sell_count = Product.query.filter_by(type='sell').count()
-    buy_count = Product.query.filter_by(type='buy').count()
+    products = Product.query.all()
+    category_counts = {name: 0 for name in CATEGORY_KEYWORDS}
+    category_counts['其他'] = 0
 
-    return jsonify({
-        'distribution': [
-            {'name': '出售', 'value': sell_count},
-            {'name': '求购', 'value': buy_count}
-        ]
-    })
+    # 预先加载所有商品的标签，避免N+1查询
+    product_tags_map = {}
+    for pt in ProductTag.query.all():
+        product_tags_map.setdefault(pt.product_id, []).append(pt.tag_id)
+
+    # 预加载所有标签名称
+    tag_names = {t.id: t.name for t in Tag.query.all()}
+
+    for product in products:
+        matched = False
+        tag_ids = product_tags_map.get(product.id, [])
+
+        # 完全按照标签中的大类名称来匹配
+        for tag_id in tag_ids:
+            tag_name = tag_names.get(tag_id, '')
+            if tag_name in CATEGORY_KEYWORDS:
+                category_counts[tag_name] += 1
+                matched = True
+                break
+
+        if not matched:
+            category_counts['其他'] += 1
+
+    distribution = [
+        {'name': name, 'value': count}
+        for name, count in category_counts.items()
+        if count > 0
+    ]
+
+    return jsonify({'distribution': distribution})
 
 @bp.route('/product-status', methods=['GET'])
 def get_product_status():

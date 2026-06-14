@@ -21,15 +21,26 @@
         </el-form-item>
 
         <el-form-item label="商品描述" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            placeholder="请详细描述商品信息"
-            :rows="6"
-            maxlength="1000"
-            show-word-limit
-            @input="triggerPriceEstimate"
-          />
+          <div class="description-area">
+            <el-input
+              v-model="form.description"
+              type="textarea"
+              placeholder="请详细描述商品信息"
+              :rows="6"
+              maxlength="1000"
+              show-word-limit
+              @input="triggerPriceEstimate"
+            />
+            <el-button
+              type="warning"
+              size="small"
+              :loading="copywritingGenerating"
+              @click="generateCopywriting"
+              class="ai-copywriting-btn"
+            >
+              {{ copywritingGenerating ? '生成中...' : '✨ AI文案' }}
+            </el-button>
+          </div>
         </el-form-item>
 
         <el-form-item label="成色" v-if="form.type === 'sell'" class="condition-item">
@@ -79,10 +90,14 @@
                 @close="removeTag(tag)"
               >
                 {{ tag.name }}
+                <el-tag v-if="tag.is_ai_generated" size="small" type="info" style="margin-left: 4px; font-size: 10px;">AI</el-tag>
               </el-tag>
               <el-button size="small" @click="showTagDialog = true">+ 添加标签</el-button>
+              <el-tag v-if="tagsGenerating" type="info" effect="plain" style="margin: 4px;">
+                AI生成中...
+              </el-tag>
             </div>
-            <p class="tag-hint">AI将自动识别商品并生成标签，您也可以手动添加</p>
+            <p class="tag-hint">AI将自动识别商品并生成标签，您也可以手动添加或删除</p>
           </div>
         </el-form-item>
 
@@ -140,7 +155,10 @@ const newTagName = ref('')
 const availableTags = ref([])
 const estimatedPrice = ref(null)
 const priceEstimating = ref(false)
+const copywritingGenerating = ref(false)
+const tagsGenerating = ref(false)
 let priceEstimateTimer = null
+const tagsGenerated = ref(false)
 
 const form = reactive({
   type: 'sell',
@@ -166,8 +184,41 @@ async function fetchAvailableTags() {
   }
 }
 
-function handleFileChange(file) {
+async function handleFileChange(file) {
   fileList.value = [file]
+  // 上传图片后自动调用 AI 标签生成，只生成一次
+  if (!tagsGenerated.value) {
+    await autoGenerateTags()
+  }
+}
+
+async function autoGenerateTags() {
+  if (!form.title || !form.description || tagsGenerated.value) {
+    return
+  }
+  tagsGenerating.value = true
+  try {
+    const res = await aiAPI.generateTags({
+      title: form.title,
+      description: form.description
+    })
+    if (res.data.tags && res.data.tags.length > 0) {
+      // 保留已有标签，添加新生成的标签（去重）
+      const existingNames = new Set(form.tags.map(t => t.name))
+      for (const tagName of res.data.tags) {
+        if (!existingNames.has(tagName)) {
+          form.tags.push({ name: tagName, color: '#409eff', is_ai_generated: true })
+          existingNames.add(tagName)
+        }
+      }
+      tagsGenerated.value = true
+      ElMessage.success('AI标签已生成')
+    }
+  } catch (e) {
+    console.error('Tag generation failed:', e)
+  } finally {
+    tagsGenerating.value = false
+  }
 }
 
 function handleConditionChange(val) {
@@ -256,6 +307,34 @@ function useEstimatedPrice() {
   }
 }
 
+async function generateCopywriting() {
+  if (!form.title || !form.description) {
+    ElMessage.warning('请先填写商品标题和描述')
+    return
+  }
+
+  copywritingGenerating.value = true
+  try {
+    const res = await aiAPI.generateCopywriting({
+      title: form.title,
+      description: form.description,
+      condition: form.condition || ''
+    })
+
+    if (res.data.copywriting) {
+      form.description = res.data.copywriting
+      ElMessage.success('AI文案已生成')
+    } else {
+      ElMessage.error('文案生成失败，请重试')
+    }
+  } catch (e) {
+    console.error('Copywriting generation failed:', e)
+    ElMessage.error('文案生成失败，请检查网络后重试')
+  } finally {
+    copywritingGenerating.value = false
+  }
+}
+
 async function handleSubmit() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
@@ -266,29 +345,25 @@ async function handleSubmit() {
     formData.append('title', form.title)
     formData.append('description', form.description)
     formData.append('type', form.type)
+    if (form.condition) {
+      formData.append('condition', form.condition)
+    }
     if (form.price) {
       formData.append('price', form.price)
     }
     if (fileList.value.length > 0) {
       formData.append('image', fileList.value[0].raw)
     }
+    if (form.tags.length > 0) {
+      formData.append('tags', JSON.stringify(form.tags.map(t => ({
+        id: t.id || null,
+        name: t.name,
+        is_ai_generated: t.is_ai_generated || false
+      }))))
+    }
 
     const res = await productAPI.create(formData)
     const productId = res.data.product.id
-
-    if (form.tags.length > 0) {
-      for (const tag of form.tags) {
-        try {
-          if (tag.id) {
-            await tagAPI.addProductTag(productId, { tag_id: tag.id })
-          } else {
-            await tagAPI.addProductTag(productId, { tag_name: tag.name })
-          }
-        } catch (e) {
-          console.error('Failed to add tag:', e)
-        }
-      }
-    }
 
     ElMessage.success('发布成功')
     router.push(`/product/${productId}`)
@@ -307,39 +382,53 @@ onMounted(() => {
 <style scoped>
 .publish-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--color-background-page);
 }
 
+/* 导航栏 */
 .header {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--border-light);
+  backdrop-filter: blur(10px);
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 0 var(--spacing-lg);
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409eff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
   cursor: pointer;
+  letter-spacing: -0.5px;
 }
 
+/* 主内容区 - 表单容器 */
 .main-content {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 30px;
-  background: white;
-  border-radius: 12px;
+  max-width: 860px;
+  margin: var(--spacing-xl) auto;
+  padding: var(--spacing-xl);
+  background: var(--color-background);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .main-content h2 {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
 }
 
+/* 成色选择器 */
 .condition-item :deep(.el-form-item__content) {
   width: auto;
 }
@@ -347,41 +436,47 @@ onMounted(() => {
 .condition-item :deep(.el-radio-group) {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .condition-item :deep(.el-radio-button__inner) {
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md) !important;
+  border: 1.5px solid var(--border-color) !important;
+  font-weight: var(--font-weight-medium) !important;
+  box-shadow: none !important;
 }
 
+/* 价格区域 */
 .price-area {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .estimated-price {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background-color: #f0f9ff;
-  border-radius: 8px;
-  font-size: 14px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: #FAFAFA;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  border: 1px dashed var(--border-color);
 }
 
 .price-label {
-  color: #666;
-  font-weight: 500;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
 }
 
 .price-range {
-  color: #e6a23c;
-  font-weight: bold;
-  font-size: 16px;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
 }
 
+/* 标签输入区域 */
 .tags-input-area {
   width: 100%;
 }
@@ -389,28 +484,42 @@ onMounted(() => {
 .selected-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--spacing-xs);
   align-items: center;
 }
 
 .tag-hint {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #999;
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 .existing-tags {
-  margin-top: 16px;
+  margin-top: var(--spacing-lg);
 }
 
 .existing-tags p {
-  margin-bottom: 8px;
-  color: #666;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--spacing-xs);
+}
+
+/* 描述区域 */
+.description-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.ai-copywriting-btn {
+  align-self: flex-end;
 }
 </style>
