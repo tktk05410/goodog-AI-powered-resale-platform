@@ -4,12 +4,7 @@ import { useUserStore } from '@/store/user'
 const routes = [
   {
     path: '/',
-    redirect: '/home'
-  },
-  {
-    path: '/home',
-    name: 'Home',
-    component: () => import('@/views/Home.vue')
+    redirect: '/products'
   },
   {
     path: '/login',

@@ -2,11 +2,12 @@
   <div class="product-detail-page">
     <header class="header">
       <div class="header-content">
-        <h1 class="logo" @click="$router.push('/')">goodog <span class="chinese-name">闲狗</span></h1>
+        <h1 class="logo" @click="$router.push('/products')">goodog <span class="chinese-name">闲狗</span></h1>
         <div class="user-area">
           <template v-if="userStore.isLoggedIn">
             <span class="username">{{ userStore.userInfo?.username }}</span>
-            <router-link to="/messages">消息</router-link>
+            <router-link to="/messages" v-if="!userStore.isAdmin">消息</router-link>
+            <router-link to="/messages" v-if="userStore.isAdmin">管理</router-link>
           </template>
           <template v-else>
             <router-link to="/login">登录</router-link>
@@ -71,10 +72,16 @@
 
           <div class="product-actions">
             <template v-if="userStore.isLoggedIn && userStore.userInfo?.id !== product.user_id && product.status === 'on'">
-              <el-button type="primary" @click="handleBuy">立即购买</el-button>
-              <el-button @click="handleContact">联系卖家</el-button>
+              <template v-if="product.type === 'sell'">
+                <el-button type="primary" @click="handleBuy">立即购买</el-button>
+                <el-button @click="handleContact">联系卖家</el-button>
+              </template>
+              <template v-if="product.type === 'buy'">
+                <el-button type="primary" @click="handleContact">我有这个商品</el-button>
+                <el-button @click="handleContact">联系买家</el-button>
+              </template>
             </template>
-            <template v-if="userStore.userInfo?.id === product.user_id">
+            <template v-if="userStore.userInfo?.id === product.user_id || userStore.isAdmin">
               <el-button @click="handleEdit">编辑</el-button>
               <el-button type="danger" @click="handleDelete">删除</el-button>
             </template>

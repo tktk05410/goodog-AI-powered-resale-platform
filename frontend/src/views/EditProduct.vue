@@ -2,7 +2,7 @@
   <div class="edit-page">
     <header class="header">
       <div class="header-content">
-        <h1 class="logo" @click="$router.push('/')">goodog <span class="chinese-name">闲狗</span></h1>
+        <h1 class="logo" @click="$router.push('/products')">goodog <span class="chinese-name">闲狗</span></h1>
       </div>
     </header>
 
@@ -72,6 +72,10 @@
           <el-input-number v-model="form.price" :min="0" :precision="2" placeholder="请输入价格" />
         </el-form-item>
 
+        <el-form-item label="理想价格" prop="price" v-if="form.type === 'buy'">
+          <el-input-number v-model="form.price" :min="0" :precision="2" placeholder="请输入理想价格" />
+        </el-form-item>
+
         <el-form-item label="商品标签">
           <div class="tags-input-area">
             <div class="selected-tags">
@@ -92,8 +96,12 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="handleSubmit" :loading="submitting">保存</el-button>
-          <el-button @click="$router.back()">取消</el-button>
+          <div class="form-actions">
+            <button class="btn-primary" @click.prevent="handleSubmit" :disabled="submitting">
+              {{ submitting ? '保存中...' : '保存' }}
+            </button>
+            <button class="btn-secondary" @click.prevent="$router.back()">取消</button>
+          </div>
         </el-form-item>
       </el-form>
     </div>
@@ -181,7 +189,7 @@ async function fetchProduct() {
     const res = await productAPI.getById(route.params.id)
     const p = res.data.product
 
-    if (p.user_id !== userStore.userInfo?.id) {
+    if (p.user_id !== userStore.userInfo?.id && !userStore.isAdmin) {
       ElMessage.error('只能编辑自己发布的商品')
       router.back()
       return
@@ -222,11 +230,9 @@ function handleFileChange(file) {
 }
 
 function handleConditionChange(val) {
-  // Remove existing condition tag
   const conditionTags = ['全新未拆封', '几乎全新', '轻微使用痕迹', '中度使用痕迹', '严重使用痕迹']
   form.tags = form.tags.filter(t => !conditionTags.includes(t.name))
 
-  // Add new condition tag if selected
   if (val) {
     form.tags.push({ name: val, color: '#67c23a' })
   }
@@ -276,7 +282,7 @@ async function handleSubmit() {
     formData.append('description', form.description)
     formData.append('type', form.type)
     formData.append('status', form.status)
-    if (form.price) {
+    if (form.price !== null && form.price !== undefined) {
       formData.append('price', form.price)
     }
     if (fileList.value.length > 0) {
@@ -307,39 +313,106 @@ onMounted(() => {
 <style scoped>
 .edit-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--color-background-page);
 }
 
+/* 导航栏 */
 .header {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--border-light);
+  backdrop-filter: blur(10px);
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 0 var(--spacing-lg);
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409eff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
   cursor: pointer;
+  letter-spacing: -0.5px;
 }
 
+.chinese-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--text-tertiary);
+  margin-left: var(--spacing-xs);
+}
+
+/* 主内容区 */
 .main-content {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 30px;
-  background: white;
-  border-radius: 12px;
+  max-width: 860px;
+  margin: var(--spacing-xl) auto;
+  padding: var(--spacing-xl);
+  background: var(--color-background);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .main-content h2 {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
 }
 
+/* 表单按钮 */
+.form-actions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.btn-primary {
+  padding: 10px 28px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  padding: 10px 28px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* 成色选择器 */
 .condition-item :deep(.el-form-item__content) {
   width: auto;
 }
@@ -347,27 +420,33 @@ onMounted(() => {
 .condition-item :deep(.el-radio-group) {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .condition-item :deep(.el-radio-button__inner) {
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md) !important;
+  border: 1.5px solid var(--border-color) !important;
+  font-weight: var(--font-weight-medium) !important;
+  box-shadow: none !important;
 }
 
+/* 图片上传 */
 .image-upload-area {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .current-image {
   width: 100px;
   height: 100px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
 }
 
+/* 标签输入区域 */
 .tags-input-area {
   width: 100%;
 }
@@ -375,22 +454,24 @@ onMounted(() => {
 .selected-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--spacing-xs);
   align-items: center;
 }
 
 .existing-tags {
-  margin-top: 16px;
+  margin-top: var(--spacing-lg);
 }
 
 .existing-tags p {
-  margin-bottom: 8px;
-  color: #666;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 </style>

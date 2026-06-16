@@ -2,7 +2,13 @@
   <div class="products-page">
     <header class="header">
       <div class="header-content">
-        <h1 class="logo" @click="$router.push('/')">goodog <span class="chinese-name">闲狗</span></h1>
+        <h1 class="logo" @click="$router.push('/products')">goodog <span class="chinese-name">闲狗</span></h1>
+        <nav class="nav">
+          <router-link to="/products">商品</router-link>
+          <router-link to="/messages" v-if="userStore.isLoggedIn && !userStore.isAdmin">消息</router-link>
+          <router-link to="/messages" v-if="userStore.isLoggedIn && userStore.isAdmin">管理</router-link>
+          <router-link to="/stats" v-if="userStore.isLoggedIn">统计</router-link>
+        </nav>
         <div class="user-area">
           <template v-if="userStore.isLoggedIn">
             <span class="username">{{ userStore.userInfo?.username }}</span>
@@ -17,26 +23,33 @@
     </header>
 
     <div class="main-content">
+      <!-- 搜索栏 - 独立圆角搜索框 -->
       <div class="search-bar">
         <el-input
           v-model="keyword"
           placeholder="搜索商品..."
           @keyup.enter="handleSearch"
           clearable
-          style="width: 400px"
+          class="search-input"
         >
-          <template #append>
-            <el-button @click="handleSearch">搜索</el-button>
+          <template #prefix>
+            <el-icon><Search /></el-icon>
           </template>
         </el-input>
       </div>
 
-      <div class="filter-bar">
-        <el-radio-group v-model="typeFilter" @change="handleFilterChange">
-          <el-radio-button label="">全部</el-radio-button>
-          <el-radio-button label="sell">出售</el-radio-button>
-          <el-radio-button label="buy">求购</el-radio-button>
-        </el-radio-group>
+      <!-- 筛选器 + 发布商品按钮 同行 -->
+      <div class="toolbar">
+        <div class="categories">
+          <el-radio-group v-model="typeFilter" @change="handleFilterChange">
+            <el-radio-button label="">全部</el-radio-button>
+            <el-radio-button label="sell">出售</el-radio-button>
+            <el-radio-button label="buy">求购</el-radio-button>
+          </el-radio-group>
+        </div>
+        <el-button type="primary" class="publish-btn" @click="$router.push('/publish')" v-if="userStore.isLoggedIn">
+          发布商品
+        </el-button>
       </div>
 
       <div class="product-list" v-loading="loading">
@@ -54,23 +67,13 @@
             </div>
             <div class="product-info">
               <h3 class="product-title">{{ product.title }}</h3>
-              <div class="product-tags" v-if="product.tags && product.tags.length > 0">
-                <el-tag
-                  v-for="tag in product.tags.slice(0, 3)"
-                  :key="tag.id"
-                  :color="tag.color"
-                  size="small"
-                  style="color: white; margin-right: 4px;"
-                >
-                  {{ tag.name }}
-                </el-tag>
-              </div>
               <p class="product-desc">{{ product.description }}</p>
               <div class="product-meta">
                 <span class="product-price" v-if="product.price">¥{{ product.price }}</span>
                 <span class="product-type" :class="product.type">
                   {{ product.type === 'sell' ? '出售' : '求购' }}
                 </span>
+                <span class="product-user">{{ product.publisher }}</span>
               </div>
             </div>
           </div>
@@ -92,6 +95,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { Search } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import { productAPI } from '@/api/modules'
 
@@ -141,6 +145,9 @@ function handlePageChange(newPage) {
 
 onMounted(() => {
   fetchProducts()
+  if (userStore.isLoggedIn && !userStore.userInfo) {
+    userStore.fetchUserInfo()
+  }
 })
 </script>
 
@@ -150,11 +157,17 @@ onMounted(() => {
   background-color: var(--color-background-page);
 }
 
-/* 导航栏 */
+/* ===================================
+   导航栏 - NOMAD极简风格
+   =================================== */
 .header {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-background);
   border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 100;
   backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .header-content {
@@ -173,6 +186,55 @@ onMounted(() => {
   color: var(--color-primary);
   cursor: pointer;
   letter-spacing: -0.5px;
+  transition: opacity 0.25s ease;
+}
+
+.logo:hover {
+  opacity: 0.7;
+}
+
+.nav {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.nav a {
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  padding: 8px 0;
+  position: relative;
+  transition: color 0.25s ease;
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transition: width 0.25s ease;
+}
+
+.nav a:hover {
+  color: var(--color-primary);
+}
+
+.nav a:hover::after {
+  width: 100%;
+}
+
+.nav a.router-link-active {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-lg);
+  padding: 6px 16px;
+}
+
+.nav a.router-link-active::after {
+  display: none;
 }
 
 .user-area {
@@ -181,59 +243,79 @@ onMounted(() => {
   gap: var(--spacing-md);
 }
 
-/* 主内容区 */
+.username {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}
+
+/* ===================================
+   主内容区域
+   =================================== */
 .main-content {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--spacing-xl) var(--spacing-lg);
 }
 
-/* 搜索栏 */
+/* ===================================
+   搜索栏 - 独立圆角矩形
+   =================================== */
 .search-bar {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
 }
 
-.search-bar :deep(.el-input__wrapper) {
+.search-input :deep(.el-input__wrapper) {
   background: var(--color-background);
-  border-radius: var(--radius-lg) !important;
-  padding: 14px 20px !important;
+  border-radius: var(--radius-xl) !important;
+  padding: 16px 24px !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1.5px solid var(--border-color) !important;
+  transition: all 0.3s ease !important;
 }
 
-/* 搜索按钮 - 黑色实心风格 */
-.search-bar :deep(.el-input-group__append) {
-  background-color: var(--color-primary) !important;
+.search-input :deep(.el-input__wrapper:hover) {
+  border-color: var(--text-tertiary) !important;
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
   border-color: var(--color-primary) !important;
-  border-radius: 0 var(--radius-lg) var(--radius-lg) 0 !important;
-  padding: 0 !important;
-  box-shadow: none !important;
+  box-shadow: var(--shadow-md), 0 0 0 4px rgba(0, 0, 0, 0.05) !important;
 }
 
-.search-bar :deep(.el-input-group__append .el-button) {
-  background: transparent !important;
-  border: none !important;
-  color: var(--text-inverse) !important;
-  font-weight: var(--font-weight-semibold) !important;
-  font-size: var(--font-size-base) !important;
-  padding: 14px 32px !important;
-  height: auto !important;
+.search-input :deep(.el-input__inner) {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
 }
 
-.search-bar :deep(.el-input-group__append:hover) {
-  background-color: var(--color-primary-hover) !important;
-  border-color: var(--color-primary-hover) !important;
+.search-input :deep(.el-input__prefix .el-icon) {
+  font-size: 18px;
+  color: var(--text-tertiary);
 }
 
-/* 筛选栏 */
-.filter-bar {
+/* ===================================
+   工具栏 - 筛选器 + 发布按钮同行
+   =================================== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: var(--spacing-xl);
 }
 
-.filter-bar :deep(.el-radio-group) {
+.publish-btn {
+  border-radius: var(--radius-lg) !important;
+  padding: 12px 28px !important;
+  font-weight: var(--font-weight-semibold) !important;
+}
+
+/* 分类筛选器 */
+.categories :deep(.el-radio-group) {
   display: flex;
   gap: var(--spacing-sm);
 }
 
-.filter-bar :deep(.el-radio-button__inner) {
+.categories :deep(.el-radio-button__inner) {
   border: 1.5px solid var(--border-color) !important;
   border-radius: var(--radius-md) !important;
   padding: 10px 24px !important;
@@ -241,15 +323,19 @@ onMounted(() => {
   color: var(--text-secondary) !important;
   background: transparent !important;
   box-shadow: none !important;
+  transition: all 0.25s ease !important;
 }
 
-.filter-bar :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+.categories :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
   background: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
   color: var(--text-inverse) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
-/* 商品网格 */
+/* ===================================
+   商品网格系统 - NOMAD卡片风格
+   =================================== */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -278,6 +364,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
 }
 
 .product-image img {
@@ -294,6 +381,7 @@ onMounted(() => {
 .no-image {
   color: var(--text-tertiary);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .product-info {
@@ -309,10 +397,6 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.product-tags {
-  margin-bottom: var(--spacing-sm);
 }
 
 .product-desc {
@@ -352,6 +436,12 @@ onMounted(() => {
 .product-type.buy {
   background: #FFF9E6;
   color: #B8860B;
+}
+
+.product-user {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 /* 分页器 */

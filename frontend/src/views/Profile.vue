@@ -2,7 +2,7 @@
   <div class="profile-page">
     <header class="header">
       <div class="header-content">
-        <h1 class="logo" @click="$router.push('/')">goodog <span class="chinese-name">闲狗</span></h1>
+        <h1 class="logo" @click="$router.push('/products')">goodog <span class="chinese-name">闲狗</span></h1>
       </div>
     </header>
 
@@ -35,6 +35,7 @@
         <div class="profile-actions">
           <el-button @click="showEditDialog = true">编辑资料</el-button>
           <el-button @click="showPasswordDialog = true">修改密码</el-button>
+          <el-button type="danger" plain @click="handleLogout">退出登录</el-button>
         </div>
       </div>
 
@@ -197,11 +198,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Wallet, ChatDotRound, Coin } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import { userAPI, productAPI, transactionAPI, authAPI } from '@/api/modules'
 
+const router = useRouter()
 const userStore = useUserStore()
 
 const loading = ref(false)
@@ -296,6 +299,12 @@ async function handleChangePassword() {
   } catch (e) {
     console.error(e)
   }
+}
+
+function handleLogout() {
+  userStore.logout()
+  ElMessage.success('已退出登录')
+  router.push('/products')
 }
 
 function getStateType(state) {

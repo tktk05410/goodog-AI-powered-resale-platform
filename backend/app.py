@@ -34,7 +34,7 @@ def create_app(config_name='default'):
     return app
 
 def register_blueprints(app):
-    from routes import auth, products, transactions, messages, users, ai, logs, stats, tags
+    from routes import auth, products, transactions, messages, users, ai, logs, stats, tags, admin
 
     app.register_blueprint(auth.bp, url_prefix='/api/auth')
     app.register_blueprint(products.bp, url_prefix='/api/products')
@@ -45,6 +45,7 @@ def register_blueprints(app):
     app.register_blueprint(logs.bp, url_prefix='/api/logs')
     app.register_blueprint(stats.bp, url_prefix='/api/stats')
     app.register_blueprint(tags.bp, url_prefix='/api/tags')
+    app.register_blueprint(admin.bp, url_prefix='/api/admin')
 
 def register_hooks(app):
     @app.before_request

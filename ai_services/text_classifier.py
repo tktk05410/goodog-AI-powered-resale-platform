@@ -179,7 +179,7 @@ class TextClassifier:
                 'max_tokens': 500
             }
 
-            response = requests.post(url, json=data, headers=headers, timeout=60)
+            response = requests.post(url, json=data, headers=headers, timeout=120)
             result = response.json()
 
             if 'choices' in result and len(result['choices']) > 0:

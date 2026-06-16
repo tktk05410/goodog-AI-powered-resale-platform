@@ -79,6 +79,14 @@ export const logAPI = {
   getUserLogs: (userId, params) => api.get(`/logs/user/${userId}`, { params })
 }
 
+export const adminAPI = {
+  getStats: () => api.get('/admin/stats'),
+  getUsers: (params) => api.get('/admin/users', { params }),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getAllProducts: (params) => api.get('/admin/products', { params }),
+  getLogs: (params) => api.get('/admin/logs', { params })
+}
+
 export const tagAPI = {
   getList: (params) => api.get('/tags/', { params }),
   getById: (id) => api.get(`/tags/${id}`),

@@ -120,15 +120,19 @@ def get_daily_transactions():
 
 @bp.route('/hourly-activity', methods=['GET'])
 def get_hourly_activity():
+    """统计用户活跃时段（按东八区时间）"""
+    # 数据库中create_time为UTC时间，查询时+8小时转换为中国本地时间
     messages = db.session.query(
-        func.hour(Message.create_time).label('hour'),
+        func.hour(func.date_add(Message.create_time, text("INTERVAL 8 HOUR"))).label('hour'),
         func.count(Message.id).label('count')
     ).group_by(
-        func.hour(Message.create_time)
+        func.hour(func.date_add(Message.create_time, text("INTERVAL 8 HOUR")))
     ).all()
 
     activity_by_hour = {i: 0 for i in range(24)}
     for hour, count in messages:
+        # 确保hour在0-23范围内
+        hour = int(hour) % 24
         activity_by_hour[hour] = count
 
     return jsonify({

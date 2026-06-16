@@ -2,7 +2,13 @@
   <div class="stats-page">
     <header class="header">
       <div class="header-content">
-        <h1 class="logo" @click="$router.push('/')">goodog <span class="chinese-name">闲狗</span></h1>
+        <h1 class="logo" @click="$router.push('/products')">goodog <span class="chinese-name">闲狗</span></h1>
+        <nav class="nav">
+          <router-link to="/products">商品</router-link>
+          <router-link to="/messages" v-if="userStore.isLoggedIn && !userStore.isAdmin">消息</router-link>
+          <router-link to="/messages" v-if="userStore.isLoggedIn && userStore.isAdmin">管理</router-link>
+          <router-link to="/stats" v-if="userStore.isLoggedIn">统计</router-link>
+        </nav>
         <div class="user-area">
           <span class="username">{{ userStore.userInfo?.username }}</span>
           <router-link to="/profile">个人中心</router-link>
@@ -232,6 +238,50 @@ onUnmounted(() => {
   color: var(--color-primary);
   cursor: pointer;
   letter-spacing: -0.5px;
+}
+
+.nav {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.nav a {
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  padding: 8px 0;
+  position: relative;
+  transition: color 0.25s ease;
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transition: width 0.25s ease;
+}
+
+.nav a:hover {
+  color: var(--color-primary);
+}
+
+.nav a:hover::after {
+  width: 100%;
+}
+
+.nav a.router-link-active {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-lg);
+  padding: 6px 16px;
+}
+
+.nav a.router-link-active::after {
+  display: none;
 }
 
 .user-area {

@@ -2,7 +2,7 @@
   <div class="publish-page">
     <header class="header">
       <div class="header-content">
-        <h1 class="logo" @click="$router.push('/')">goodog <span class="chinese-name">闲狗</span></h1>
+        <h1 class="logo" @click="$router.push('/products')">goodog <span class="chinese-name">闲狗</span></h1>
       </div>
     </header>
 
@@ -76,6 +76,10 @@
               <el-button size="small" type="primary" link @click="useEstimatedPrice">使用</el-button>
             </div>
           </div>
+        </el-form-item>
+
+        <el-form-item label="理想价格" prop="price" v-if="form.type === 'buy'">
+          <el-input-number v-model="form.price" :min="0" :precision="2" placeholder="请输入理想价格" />
         </el-form-item>
 
         <el-form-item label="商品标签">

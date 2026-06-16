@@ -196,7 +196,7 @@ def create_product():
 def update_product(product_id):
     product = Product.query.get_or_404(product_id)
 
-    if product.user_id != g.user.id:
+    if product.user_id != g.user.id and g.user.role != 'admin':
         return jsonify({'error': 'You can only update your own products'}), 403
 
     title = request.form.get('title', product.title)
@@ -275,7 +275,7 @@ def update_product(product_id):
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
 
-    if product.user_id != g.user.id:
+    if product.user_id != g.user.id and g.user.role != 'admin':
         return jsonify({'error': 'You can only delete your own products'}), 403
 
     # 先删除关联的标签记录，避免外键约束问题
