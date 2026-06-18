@@ -12,7 +12,6 @@ def get_user(user_id):
         'user': {
             'id': user.id,
             'username': user.username,
-            'student_id': user.student_id,
             'credit_score': user.credit_score,
             'create_time': user.create_time.strftime('%Y-%m-%d %H:%M:%S') if user.create_time else None
         }
@@ -27,15 +26,6 @@ def get_profile():
 @token_required
 def update_profile():
     data = request.get_json()
-
-    if data.get('student_id'):
-        existing = User.query.filter(
-            User.student_id == data['student_id'],
-            User.id != g.user.id
-        ).first()
-        if existing:
-            return jsonify({'error': 'Student ID already in use'}), 400
-        g.user.student_id = data['student_id']
 
     db.session.commit()
 

@@ -18,20 +18,15 @@ def register():
 
     username = data['username']
     password = data['password']
-    student_id = data.get('student_id')
 
     if User.query.filter_by(username=username).first():
         return jsonify({'error': 'Username already exists'}), 409
-
-    if student_id and User.query.filter_by(student_id=student_id).first():
-        return jsonify({'error': 'Student ID already registered'}), 409
 
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     user = User(
         username=username,
-        password_hash=password_hash,
-        student_id=student_id
+        password_hash=password_hash
     )
 
     db.session.add(user)

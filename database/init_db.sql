@@ -1,4 +1,4 @@
--- 校园二手交易平台数据库初始化脚本
+-- 智能化二手交易平台数据库初始化脚本
 -- 数据库名: goodog_date
 -- 端口: 3306
 -- 用户: root
@@ -12,12 +12,10 @@ CREATE TABLE IF NOT EXISTS `user` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `username` VARCHAR(50) NOT NULL UNIQUE,
     `password_hash` VARCHAR(64) NOT NULL,
-    `student_id` VARCHAR(20) UNIQUE,
     `credit_score` INT DEFAULT 100,
     `face_encoding` BLOB,
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    INDEX `idx_username` (`username`),
-    INDEX `idx_student_id` (`student_id`)
+    INDEX `idx_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 商品表

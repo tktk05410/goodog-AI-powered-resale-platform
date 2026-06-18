@@ -12,7 +12,6 @@
           <div class="avatar">{{ user.username?.charAt(0).toUpperCase() }}</div>
           <div class="user-info">
             <h2>{{ user.username }}</h2>
-            <p>学号：{{ user.student_id || '未绑定' }}</p>
             <p>注册时间：{{ user.create_time }}</p>
           </div>
         </div>
@@ -126,14 +125,9 @@
     </div>
 
     <el-dialog v-model="showEditDialog" title="编辑资料" width="400px">
-      <el-form :model="editForm" label-width="80px">
-        <el-form-item label="学号">
-          <el-input v-model="editForm.student_id" placeholder="请输入学号" />
-        </el-form-item>
-      </el-form>
+      <p>暂无可编辑资料</p>
       <template #footer>
-        <el-button @click="showEditDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleEditProfile">保存</el-button>
+        <el-button @click="showEditDialog = false">关闭</el-button>
       </template>
     </el-dialog>
 
@@ -229,9 +223,7 @@ const stats = reactive({
   completed_deals: 0
 })
 
-const editForm = reactive({
-  student_id: ''
-})
+const editForm = reactive({})
 
 const passwordForm = reactive({
   old_password: '',
@@ -242,7 +234,6 @@ async function fetchProfile() {
   try {
     const res = await userAPI.getProfile()
     user.value = res.data.user
-    editForm.student_id = user.value.student_id || ''
   } catch (e) {
     console.error(e)
   }
@@ -279,14 +270,7 @@ async function fetchTransactions() {
 }
 
 async function handleEditProfile() {
-  try {
-    await userAPI.updateProfile({ student_id: editForm.student_id })
-    ElMessage.success('修改成功')
-    showEditDialog.value = false
-    fetchProfile()
-  } catch (e) {
-    console.error(e)
-  }
+  showEditDialog.value = false
 }
 
 async function handleChangePassword() {

@@ -16,7 +16,6 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(64), nullable=False)
-    student_id = db.Column(db.String(20), unique=True)
     credit_score = db.Column(db.Integer, default=100)
     face_encoding = db.Column(db.LargeBinary, nullable=True)
     role = db.Column(db.Enum('user', 'admin'), default='user')
@@ -30,7 +29,6 @@ class User(db.Model):
         return {
             'id': self.id,
             'username': self.username,
-            'student_id': self.student_id,
             'credit_score': self.credit_score,
             'role': self.role,
             'create_time': utc_to_local(self.create_time)

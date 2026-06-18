@@ -65,7 +65,6 @@
             <el-table :data="adminUsers" style="width: 100%" v-loading="loading">
               <el-table-column prop="id" label="ID" width="60" />
               <el-table-column prop="username" label="用户名" />
-              <el-table-column prop="student_id" label="学号" />
               <el-table-column prop="credit_score" label="信用分" width="90" />
               <el-table-column prop="role" label="角色" width="90" />
               <el-table-column prop="create_time" label="注册时间" />

@@ -1,10 +1,10 @@
-# GoodDog 校园二手交易平台
+# GoodDog 智能化二手交易平台
 
-基于 Vue3 + Flask + MySQL 的校园二手交易平台，集成 Qwen3.7-plus 多模态 AI 实现商品自动识别、标签生成、价格估算与文案生成。
+基于 Vue3 + Flask + MySQL 的智能化二手交易平台，集成 Qwen3.7-plus 多模态 AI 实现商品自动识别、标签生成、价格估算与文案生成。
 
 ## 项目介绍
 
-GoodDog 是一款面向高校学生的校园二手交易平台，旨在为在校学生提供一个安全、便捷、智能化的闲置物品交易环境。平台支持商品发布与浏览、即时通讯、订单交易、数据统计等核心功能，并通过 AI 能力辅助用户快速完成商品定价、标签生成与文案撰写，提升交易效率与体验。
+GoodDog 是一款智能化的二手交易平台，旨在为用户提供一个安全、便捷、智能化的闲置物品交易环境。平台支持商品发布与浏览、即时通讯、订单交易、数据统计等核心功能，并通过 AI 能力辅助用户快速完成商品定价、标签生成与文案撰写，提升交易效率与体验。
 
 > 截图存放位置：`docs/images/`。将对应页面的截图按下方文件名放入该目录后，README 会自动显示。
 
@@ -129,7 +129,7 @@ goodog/
 
 | 表名 | 说明 | 关键字段 |
 |------|------|----------|
-| `user` | 用户信息 | `id`、`username`、`password_hash`、`student_id`、`credit_score`、`face_encoding` |
+| `user` | 用户信息 | `id`、`username`、`password_hash`、`credit_score`、`face_encoding` |
 | `product` | 商品信息 | `id`、`title`、`description`、`type`（sell/buy）、`price`、`status`、`user_id` |
 | `transaction` | 交易订单 | `id`、`product_id`、`buyer_id`、`seller_id`、`state`（pending/paid/done/canceled） |
 | `message` | 用户消息 | `id`、`from_user`、`to_user`、`content`、`is_read`、`ai_summary` |

@@ -12,9 +12,6 @@
         <el-form-item prop="confirmPassword">
           <el-input v-model="form.confirmPassword" type="password" placeholder="确认密码" />
         </el-form-item>
-        <el-form-item prop="student_id">
-          <el-input v-model="form.student_id" placeholder="学号（可选）" />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" native-type="submit" :loading="loading" style="width: 100%">
             注册
@@ -43,8 +40,7 @@ const loading = ref(false)
 const form = reactive({
   username: '',
   password: '',
-  confirmPassword: '',
-  student_id: ''
+  confirmPassword: ''
 })
 
 const validateConfirmPassword = (rule, value, callback) => {
@@ -76,7 +72,7 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    await userStore.register(form.username, form.password, form.student_id)
+    await userStore.register(form.username, form.password)
     ElMessage.success('注册成功')
     router.push('/')
   } catch (e) {
