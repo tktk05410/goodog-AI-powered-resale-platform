@@ -1,0 +1,391 @@
+/* ===================================
+   NOMAD-inspired Design System
+   极简黑白设计语言
+   =================================== */
+
+/* CSS 设计令牌 (Design Tokens) */
+:root {
+  /* 配色方案 */
+  --color-primary: #000000;
+  --color-primary-hover: #333333;
+  --color-background: #FFFFFF;
+  --color-background-alt: #FAFAFA;
+  --color-background-page: #F8F8F8;
+
+  /* 文字颜色 */
+  --text-primary: #1A1A1A;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-inverse: #FFFFFF;
+
+  /* 边框与分割线 */
+  --border-color: #E5E5E5;
+  --border-light: #F0F0F0;
+
+  /* 字体系统 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* 字号层级 */
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-md: 17px;
+  --font-size-lg: 20px;
+  --font-size-xl: 28px;
+  --font-size-2xl: 36px;
+
+  /* 字重 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* 间距系统 */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+  --spacing-2xl: 64px;
+
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 50%;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* 布局 */
+  --max-width: 1320px;
+  --header-height: 72px;
+}
+
+/* 全局重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background-color: var(--color-background-page);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.25s ease;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+input, textarea, button, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ===================================
+   布局容器
+   =================================== */
+
+.page-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+/* ===================================
+   卡片组件
+   =================================== */
+
+.card {
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+/* ===================================
+   按钮样式覆盖 (Element Plus)
+   =================================== */
+
+.el-button--primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--text-inverse) !important;
+  font-weight: var(--font-weight-semibold) !important;
+  padding: 12px 28px !important;
+  border-radius: var(--radius-md) !important;
+  font-size: var(--font-size-base) !important;
+  transition: all 0.25s ease !important;
+}
+
+.el-button--primary:hover {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.el-button--default {
+  border-radius: var(--radius-md) !important;
+  padding: 12px 28px !important;
+  font-weight: var(--font-weight-medium) !important;
+  border: 1.5px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  background: transparent !important;
+  transition: all 0.25s ease !important;
+}
+
+.el-button--default:hover {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+/* ===================================
+   表单元素样式优化
+   =================================== */
+
+.el-input__wrapper,
+.el-textarea__inner {
+  border-radius: var(--radius-md) !important;
+  border: 1.5px solid var(--border-color) !important;
+  box-shadow: none !important;
+  padding: 10px 16px !important;
+  font-size: var(--font-size-base) !important;
+  transition: all 0.25s ease !important;
+}
+
+.el-input__wrapper:focus-within,
+.el-textarea__inner:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ===================================
+   工具类
+   =================================== */
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chinese-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--text-tertiary);
+  margin-left: var(--spacing-xs);
+  letter-spacing: 0.5px;
+}
+
+/* ===================================
+   Element Plus 全局覆盖
+   =================================== */
+
+/* 标签样式 */
+.el-tag {
+  border-radius: var(--radius-sm) !important;
+  font-weight: var(--font-weight-medium) !important;
+  padding: 4px 12px !important;
+}
+
+/* 分页器 */
+.el-pagination {
+  --el-pagination-button-bg-color: var(--color-background);
+  --el-pagination-hover-color: var(--color-primary);
+}
+
+/* 对话框 */
+.el-dialog {
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden;
+}
+
+.el-dialog__header {
+  padding: var(--spacing-lg) var(--spacing-lg) 0 !important;
+}
+
+.el-dialog__body {
+  padding: var(--spacing-md) var(--spacing-lg) !important;
+}
+
+/* 空状态 */
+.el-empty__description p {
+  color: var(--text-tertiary) !important;
+}
+
+/* ===================================
+   标签组件 (el-tag) - NOMAD黑白风格
+   =================================== */
+
+/* 默认标签 - 灰色系 */
+.el-tag {
+  background-color: #F5F5F5 !important;
+  border-color: #E5E5E5 !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: var(--font-weight-medium) !important;
+  padding: 4px 12px !important;
+  font-size: var(--font-size-xs) !important;
+}
+
+/* 成功标签（出售等） */
+.el-tag--success {
+  background-color: #F5F5F5 !important;
+  border-color: #D9D9D9 !important;
+  color: var(--text-primary) !important;
+}
+
+/* 警告标签（求购等） */
+.el-tag--warning {
+  background-color: #FFF9E6 !important;
+  border-color: #FFE58F !important;
+  color: #B8860B !important;
+}
+
+/* 危险标签 */
+.el-tag--danger {
+  background-color: #FFF1F0 !important;
+  border-color: #FFA39E !important;
+  color: #CF1322 !important;
+}
+
+/* 信息标签 */
+.el-tag--info {
+  background-color: #F5F5F5 !important;
+  border-color: #D9D9D9 !important;
+  color: var(--text-secondary) !important;
+}
+
+/* 带颜色的标签（如AI生成的标签） */
+.el-tag--dark,
+.el-tag[class*="el-tag--"] {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ===================================
+   标签页 (el-tabs) - NOMAD黑白风格
+   =================================== */
+
+.el-tabs__active-bar {
+  background-color: var(--color-primary) !important;
+  height: 3px !important;
+  border-radius: 2px !important;
+}
+
+.el-tabs__item {
+  color: var(--text-secondary) !important;
+  font-weight: var(--font-weight-medium) !important;
+  font-size: var(--font-size-base) !important;
+  padding: 0 20px !important;
+  transition: color 0.25s ease !important;
+}
+
+.el-tabs__item:hover {
+  color: var(--text-primary) !important;
+}
+
+.el-tabs__item.is-active {
+  color: var(--color-primary) !important;
+  font-weight: var(--font-weight-bold) !important;
+}
+
+.el-tabs__nav-wrap::after {
+  background-color: var(--border-light) !important;
+}
+
+/* ===================================
+   徽章 (el-badge)
+   =================================== */
+
+.el-badge__content {
+  background-color: var(--color-primary) !important;
+  border: none !important;
+  font-weight: var(--font-weight-semibold) !important;
+}
+
+/* ===================================
+   单选按钮组 (el-radio-group)
+   =================================== */
+
+.el-radio-button__inner {
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 10px 24px !important;
+  font-weight: var(--font-weight-medium) !important;
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: all 0.25s ease !important;
+}
+
+.el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--text-inverse) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ===================================
+   复选框和开关
+   =================================== */
+
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.el-switch.is-checked .el-switch__core {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
